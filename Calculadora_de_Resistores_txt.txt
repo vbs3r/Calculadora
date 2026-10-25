@@ -1,0 +1,138 @@
+# Valores base de la serie E12 (tolerancia 10%) y E24 (tolerancia 5%/1%)
+E12 = [1.0, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2]
+E24 = [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1]
+
+def generar_valores_comerciales(serie, max_decadas=6):
+    """Genera la lista de valores comerciales multiplicando por potencias de 10."""
+    valores = []
+    for decada in range(max_decadas):
+        for valor_base in serie:
+            valores.append(round(valor_base * (10 ** decada), 2))
+    return sorted(valores)
+
+# Selección según la tolerancia elegida por el usuario
+def obtener_lista_resistencias(tolerancia):
+    if tolerancia == 10:
+        return generar_valores_comerciales(E12)
+    else: # Para 1% o 5%
+        return generar_valores_comerciales(E24)
+    
+#==================================================
+
+def calcular_serie(valores):
+    return sum(valores)
+
+def calcular_paralelo(valores):
+    # Evitamos la división por cero
+    if 0 in valores: return float('inf')
+    return 1 / sum(1/v for v in valores)
+
+#==================================================
+
+import itertools
+
+def _topologias_3r(a, b, c):
+    """Topologías serie-paralelo y paralelo-serie únicas para 3 resistencias."""
+    opciones = {}
+    # Elegir cuál de las tres es la "sola" (las otras dos forman el par)
+    for sola, p1, p2 in [(a, b, c), (b, a, c), (c, a, b)]:
+        # (p1 + p2) || sola
+        den = p1 + p2 + sola
+        if den > 0:
+            v = (p1 + p2) * sola / den
+            opciones[f"({p1:g}+{p2:g})||{sola:g}"] = ('Serie-Paralelo', v)
+        # (p1 || p2) + sola
+        if p1 + p2 > 0:
+            v = p1 * p2 / (p1 + p2) + sola
+            opciones[f"({p1:g}||{p2:g})+{sola:g}"] = ('Paralelo-Serie', v)
+    return [(t, v, e) for e, (t, v) in opciones.items()]
+
+
+def encontrar_mejores_combinaciones(target, resistencias, tolerancia_pct):
+    """Serie, paralelo y mixtas (1 a 3 resistencias)."""
+    resultados = []
+
+    for r in range(1, 4):
+        for combo in itertools.combinations_with_replacement(resistencias, r):
+            # --- Serie pura ---
+            v = sum(combo)
+            err = abs(v - target) / target * 100
+            if err <= tolerancia_pct:
+                resultados.append({
+                    'tipo': 'Serie',
+                    'expresion': ' + '.join(f"{x:g}" for x in combo),
+                    'combinacion': combo,
+                    'valor_eq': round(v, 2),
+                    'error': round(err, 3),
+                    'n': r,
+                })
+
+            # --- Paralelo puro ---
+            if r > 1:
+                v = 1 / sum(1/x for x in combo)
+                err = abs(v - target) / target * 100
+                if err <= tolerancia_pct:
+                    resultados.append({
+                        'tipo': 'Paralelo',
+                        'expresion': ' || '.join(f"{x:g}" for x in combo),
+                        'combinacion': combo,
+                        'valor_eq': round(v, 2),
+                        'error': round(err, 3),
+                        'n': r,
+                    })
+
+            # --- Mixtas (solo con 3) ---
+            if r == 3:
+                for tipo, v, expr in _topologias_3r(*combo):
+                    err = abs(v - target) / target * 100
+                    if err <= tolerancia_pct:
+                        resultados.append({
+                            'tipo': tipo,
+                            'expresion': expr,
+                            'combinacion': combo,
+                            'valor_eq': round(v, 2),
+                            'error': round(err, 3),
+                            'n': r,
+                        })
+
+    # Eliminar duplicados por expresión
+    vistos, unicos = set(), []
+    for r in resultados:
+        k = (r['expresion'], r['valor_eq'])
+        if k not in vistos:
+            vistos.add(k)
+            unicos.append(r)
+
+    # Menor error primero; a igual error, menos resistencias
+    return sorted(unicos, key=lambda x: (x['error'], x['n']))
+
+#==================================================
+
+if __name__ == "__main__":
+    objetivo  = float(input("Valor deseado (Ω): ").replace(",", "."))
+    tolerancia = float(input("Tolerancia aceptada (%): ").replace(",", "."))
+
+    if tolerancia >= 10:
+        resistencias, etiqueta = obtener_lista_resistencias(10), "E12"
+    else:
+        resistencias, etiqueta = obtener_lista_resistencias(5),  "E24"
+
+    print(f"\nBuscando {objetivo} Ω ±{tolerancia}% en serie {etiqueta}...")
+    resultados = encontrar_mejores_combinaciones(objetivo, resistencias, tolerancia)
+
+    if not resultados:
+        print("❌ Nada dentro de la tolerancia.")
+    else:
+        print(f"\n✅ {len(resultados)} opciones. Las 15 mejores:\n")
+        print(f"{'#':>3}  {'Topología':<16} {'Expresión':<32} {'Valor':>10} {'Error':>8}")
+        print("-" * 76)
+        for i, r in enumerate(resultados[:15], 1):
+            print(f"{i:>3}  {r['tipo']:<16} {r['expresion']:<32} "
+                  f"{r['valor_eq']:>8.2f}Ω {r['error']:>7.3f}%")
+
+        from collections import Counter
+        mejor = resultados[0]
+        conteo = Counter(mejor['combinacion'])
+        print(f"\n🛒 Lista de compras para la mejor opción ({mejor['expresion']}):")
+        for valor, cant in sorted(conteo.items()):
+            print(f"   • {cant}× {valor:g} Ω")
