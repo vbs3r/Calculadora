@@ -128,16 +128,16 @@ with col3:
 
 def render_resistor(valor, tol):
     bands = bandas_resistor(valor, tol)
-    if not bands: return f"<div>{valor} Ω</div>"
+    if not bands: return f"<div style='color: #000000;'>{valor} Ω</div>"
     band_divs = "".join([f'<div class="band" style="background-color: {color};"></div>' for color in bands])
-    # HTML sin indentación para evitar que Streamlit lo lea como bloque de código
+    # Añadimos 'color: #000000;' al span para forzar el color negro
     return f"""<div style="display: flex; flex-direction: column; align-items: center;">
 <div class="resistor-container">
 <div class="resistor-lead"></div>
 <div class="resistor-body">{band_divs}</div>
 <div class="resistor-lead"></div>
 </div>
-<span style="font-family: monospace; font-size: 14px;">{valor:g} Ω</span>
+<span style="font-family: monospace; font-size: 14px; color: #000000; font-weight: bold;">{valor:g} Ω</span>
 </div>"""
 
 if buscar:
