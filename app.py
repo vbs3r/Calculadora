@@ -172,10 +172,10 @@ if buscar:
 #{i+1}
 </div>
 <div style="flex-grow: 1;">
-<div style="margin-bottom: 5px;">
+<div style="margin-bottom: 5px; color: #000000;">
 <span style="background-color: {color_badge}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-right: 10px;">{texto_badge}</span>
-<strong style="color: #606060;">{r['tipo'].upper()}</strong> &nbsp;|&nbsp; 
-<span style="font-family: monospace; font-size: 16px; font-weight: bold;">{r['expresion']}</span>
+<strong style="color: #000000;">{r['tipo'].upper()}</strong> &nbsp;|&nbsp; 
+<span style="font-family: monospace; font-size: 16px; font-weight: bold; color: #000000;">{r['expresion']}</span>
 </div>
 <div style="display: flex; gap: 15px; flex-wrap: wrap; background: white; padding: 10px; border-radius: 8px; width: fit-content;">"""
             
