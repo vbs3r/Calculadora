@@ -152,7 +152,14 @@ footer {visibility: hidden;}
 .stButton > button:hover { background-color: #cc0000 !important; color: white !important;}
 .stButton > button:focus:not(:active) { color: white !important; border-color: transparent !important;}
 
-.card { padding: 16px; border-radius: 12px; margin-bottom: 12px; }
+/* ARREGLO: Aplicamos padding y border-radius juntos a las tarjetas de colores */
+.card-gold, .card-silver, .card-bronze { 
+    padding: 16px; 
+    border-radius: 12px !important; 
+    margin-bottom: 12px; 
+    box-sizing: border-box;
+    overflow: hidden;
+}
 .card-gold { background-color: #fdf0ba; border: 3px solid #f59e0b; }
 .card-silver { background-color: #d4dfec; border: 2px solid #9ca3af; }
 .card-bronze { background-color: #f0e8e0; border: 2px solid #b45309; }
@@ -241,8 +248,6 @@ if buscar:
             elif err < 7.0: err_bg = "#e67e00"
             else: err_bg = "#d32f2f"
 
-            # Forzamos display: flex, flex-direction: row y align-items: center en el contenedor principal
-            # También cambiamos min-width por width en el badge y le ponemos flex-shrink: 0
             html_card = f"""<div class="{clase_css}" style="display: flex; flex-direction: row; align-items: center; gap: 20px; width: 100%; box-sizing: border-box;">
 <div style="background-color: {color_badge}; color: white; width: {44 - i*4}px; height: {44 - i*4}px; flex-shrink: 0; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px;">
 #{i+1}
