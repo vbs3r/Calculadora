@@ -99,17 +99,14 @@ def bandas_resistor(valor, tolerancia_pct=5.0):
         return None
 
 # ============================================================
-# INTERFAZ GRÁFICA (STREAMLIT CON DISEÑO CUSTOMTKINTER)
+# INTERFAZ GRÁFICA (STREAMLIT)
 # ============================================================
 st.set_page_config(page_title="Calculadora de Resistencias", page_icon="⚡", layout="wide")
 
-# Inyección masiva de CSS para imitar CustomTkinter
 st.markdown("""
 <style>
-/* Importar fuentes */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
-/* Fondo general y fuente */
 .stApp {
     background-color: #f9f9f9 !important;
     font-family: 'Inter', sans-serif !important;
@@ -117,12 +114,9 @@ st.markdown("""
 }
 [data-testid="stHeader"] { background-color: transparent !important; }
 [data-testid="stToolbar"] { right: 2rem; }
-
-/* Ocultar el botón de Deploy y menú si quieres (opcional) */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 
-/* Contenedores de Inputs */
 .stNumberInput > div > div > input {
     background-color: #f2f2f2 !important;
     border: 1px solid #e0e0e0 !important;
@@ -144,7 +138,6 @@ footer {visibility: hidden;}
     text-transform: uppercase;
 }
 
-/* Botón principal (Buscar) */
 .stButton > button {
     background-color: #ff0000 !important;
     color: white !important;
@@ -159,13 +152,11 @@ footer {visibility: hidden;}
 .stButton > button:hover { background-color: #cc0000 !important; color: white !important;}
 .stButton > button:focus:not(:active) { color: white !important; border-color: transparent !important;}
 
-/* Estilos de las tarjetas de resultados */
-.card { padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 20px; }
+.card { padding: 16px; border-radius: 12px; margin-bottom: 12px; }
 .card-gold { background-color: #fdf0ba; border: 3px solid #f59e0b; }
 .card-silver { background-color: #d4dfec; border: 2px solid #9ca3af; }
 .card-bronze { background-color: #f0e8e0; border: 2px solid #b45309; }
 
-/* El resistor */
 .resistor-container { display: flex; align-items: center; margin: 8px 0; }
 .resistor-lead { width: 15px; height: 3px; background-color: #9aa0a8; }
 .resistor-body { width: 70px; height: 24px; background-color: #e8d4a8; border: 1px solid #8b7355; border-radius: 4px; display: flex; justify-content: space-evenly; align-items: center; }
@@ -176,11 +167,9 @@ footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# --- TÍTULO ESTILO TINKERCAD ---
 words = ["CALCULADORA", "DE", "RESISTENCIAS"]
 color_idx = 0
 title_html = '<div style="text-align: center; margin-bottom: 5px; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">'
-
 for i, word in enumerate(words):
     title_html += '<div style="display: flex; gap: 2px;">'
     for char in word:
@@ -191,7 +180,6 @@ for i, word in enumerate(words):
 title_html += '</div>'
 st.markdown(title_html, unsafe_allow_html=True)
 
-# --- SUBTÍTULO ---
 st.markdown("""
 <div style="text-align: center; margin-bottom: 30px; display: flex; justify-content: center; align-items: center; gap: 8px;">
     <div style="width: 4px; height: 14px; background-color: #e74c3c; border-radius: 2px;"></div>
@@ -199,24 +187,21 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- CONTROLES (INPUTS Y BOTÓN) ---
-# Ajustamos las columnas para que se vea alineado como en Tkinter
 col1, col2, col3 = st.columns([3, 3, 4])
 with col1:
     objetivo = st.number_input("VALOR DESEADO (Ω)", min_value=0.1, value=500.0, step=10.0)
 with col2:
     tolerancia = st.number_input("TOLERANCIA (%)", min_value=0.1, value=5.0, step=1.0)
 with col3:
-    st.write("") # Espacio para alinear con los inputs
+    st.write("")
     st.write("")
     buscar = st.button("🔍   Buscar combinaciones", use_container_width=True)
 
-# --- FUNCIÓN DEL RESISTOR ---
 def render_resistor(valor, tol):
     bands = bandas_resistor(valor, tol)
     if not bands: return f"<div style='color: #000; font-family: monospace;'>{valor} Ω</div>"
     band_divs = "".join([f'<div class="band" style="background-color: {color};"></div>' for color in bands])
-    return f"""<div style="display: flex; flex-direction: column; align-items: center; background: #ffffff; border-radius: 8px; padding: 8px 12px; border: 1px solid #e0e0e0;">
+    return f"""<div style="display: flex; flex-direction: column; align-items: center; background: #ffffff; border-radius: 8px; padding: 8px 12px; border: 1px solid #e0e0e0; box-sizing: border-box;">
 <div class="resistor-container">
 <div class="resistor-lead"></div>
 <div class="resistor-body">{band_divs}</div>
@@ -225,7 +210,6 @@ def render_resistor(valor, tol):
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #000000; font-weight: bold; margin-top: 4px;">{valor:g} Ω</span>
 </div>"""
 
-# --- LÓGICA Y RENDERIZADO ---
 if buscar:
     with st.spinner("Calculando combinaciones..."):
         resistencias = obtener_lista_resistencias(tolerancia)
@@ -235,7 +219,6 @@ if buscar:
     if not resultados:
         st.error("❌ Nada dentro de la tolerancia. Prueba a subir el %.")
     else:
-        # Status de éxito
         st.markdown(f"""
         <div style="text-align: center; margin: 20px 0; color: #1e8e3e; font-weight: bold;">
             ✅ Top {min(3, len(resultados))} de {len(resultados)} combinaciones · Serie {etiqueta}
@@ -258,30 +241,29 @@ if buscar:
             elif err < 7.0: err_bg = "#e67e00"
             else: err_bg = "#d32f2f"
 
-            # HTML de la Tarjeta (Con colores forzados a negro)
-            html_card = f"""<div class="{clase_css}">
-<div style="background-color: {color_badge}; color: white; min-width: {44 - i*4}px; height: {44 - i*4}px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px;">
+            # Forzamos display: flex, flex-direction: row y align-items: center en el contenedor principal
+            # También cambiamos min-width por width en el badge y le ponemos flex-shrink: 0
+            html_card = f"""<div class="{clase_css}" style="display: flex; flex-direction: row; align-items: center; gap: 20px; width: 100%; box-sizing: border-box;">
+<div style="background-color: {color_badge}; color: white; width: {44 - i*4}px; height: {44 - i*4}px; flex-shrink: 0; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px;">
 #{i+1}
 </div>
-<div style="flex-grow: 1;">
-<div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-<span style="background-color: {color_badge}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">{texto_badge if texto_badge else '&nbsp;'}</span>
-<strong style="color: #606060; font-size: 12px; letter-spacing: 0.5px;">{r['tipo'].upper()}</strong> 
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: bold; color: #000000;">{r['expresion']}</span>
-</div>
-<div style="display: flex; gap: 10px; flex-wrap: wrap;">"""
+<div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+    <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <span style="background-color: {color_badge}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">{texto_badge if texto_badge else '&nbsp;'}</span>
+        <strong style="color: #606060; font-size: 12px; letter-spacing: 0.5px;">{r['tipo'].upper()}</strong> 
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: bold; color: #000000;">{r['expresion']}</span>
+    </div>
+    <div style="display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap;">"""
             
-            # Insertar resistores
             for val in r['combinacion']:
                 html_card += render_resistor(val, tolerancia)
                 
             html_card += f"""</div>
 </div>
-<div style="text-align: right; min-width: 140px;">
-<p class="val-eq">{r['valor_eq']:.2f} Ω</p>
-<div class="err-chip" style="background-color: {err_bg};">Error: {err:.3f}%</div>
+<div style="text-align: right; min-width: 140px; display: flex; flex-direction: column; align-items: flex-end;">
+    <p class="val-eq">{r['valor_eq']:.2f} Ω</p>
+    <div class="err-chip" style="background-color: {err_bg};">Error: {err:.3f}%</div>
 </div>
 </div>"""
             
-            # Renderizamos el HTML
             st.markdown(html_card, unsafe_allow_html=True)
